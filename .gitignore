@@ -1,0 +1,17 @@
+# Go build artefacts
+*.exe
+*.test
+*.prof
+# Built CLI binary at repo root (NOT the cmd/audit-chain SOURCE directory)
+/audit-chain
+/audit-chain.exe
+
+# Editor / IDE
+.idea/
+.vscode/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
