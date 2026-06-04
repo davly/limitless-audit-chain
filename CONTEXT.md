@@ -86,9 +86,9 @@ cannot accidentally drift from the cohort cross-substrate anchor.
 ## Test surface
 
 ```
-pkg/chain/receipt_test.go   18 tests   shape + canonical-bytes + hash
-pkg/chain/chain_test.go     22 tests   structure + Verify + Export/Import + AppendSigned
-pkg/chain/cohort_test.go    18 tests   R174 5-of-5 pillar assertions
+pkg/chain/receipt_test.go   17 tests   shape + canonical-bytes + hash
+pkg/chain/chain_test.go     24 tests   structure + Verify + Export/Import + AppendSigned
+pkg/chain/cohort_test.go    17 tests   R174 5-of-5 pillar assertions
 pkg/chain/verify_test.go     9 tests   MirrorMark roundtrip + error wrap propagation
                             ──
                             67 tests   (well over the 40-test minimum)
