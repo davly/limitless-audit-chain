@@ -31,6 +31,7 @@ import (
 	"errors"
 	"fmt"
 	"sync/atomic"
+	"time"
 )
 
 // ===== Pillar 2: kat (R151 KAT-1 cohort invariant anchor) =====
@@ -117,6 +118,67 @@ func computeKAT1Hex(input []byte, key []byte) string {
 // match KAT1HMACSHA256Hex. Indicates the SDK's substrate has drifted
 // from the cohort canonical wire format — a R145.C firewall fail.
 var ErrKAT1Drift = errors.New("cohort: KAT-1 HMAC-SHA256 drift (substrate divergence)")
+
+// ===== Pillar 2b: chain-level KAT (multi-receipt golden) =====
+//
+// The Pillar-2 KAT above pins a SINGLE-payload Mirror-Mark (one Sign
+// call). This block freezes a CHAIN-LEVEL Known-Answer-Test: a golden
+// 3-receipt chain whose Export()/ExportCompact() bytes are pinned in
+// pkg/chain/testdata/golden_chain_v1{,.compact}.json. It is the
+// freeze-before-the-first-consumer pin of the chain wire format — any
+// future cross-substrate port (Rust/TS/Py/JVM/C#) that reproduces the
+// golden bytes HAS demonstrated chain byte-parity. Until a port does,
+// NO parity claim is made; this block proves only Go-internal
+// determinism + freezes the contract.
+
+// goldenChainV1T0 is the canonical t0 for the chain-level KAT.
+var goldenChainV1T0 = time.Date(2026, 5, 28, 12, 0, 0, 0, time.UTC)
+
+// GoldenChainV1Signers is the canonical signer sequence of the golden
+// 3-receipt chain-level KAT (the cohort's canonical pipeline prefix).
+var GoldenChainV1Signers = []SignerID{"delve", "grounded", "recall"}
+
+// goldenChainV1Payloads are the canonical payload byte literals.
+var goldenChainV1Payloads = [][]byte{
+	[]byte("delve-payload"),
+	[]byte("grounded-payload"),
+	[]byte("recall-payload"),
+}
+
+// BuildGoldenChainV1 deterministically constructs the cohort-canonical
+// chain-level KAT: a 3-receipt chain signed with the KAT-1 Mirror-Mark
+// substrate (KAT1CorpusSHA / KAT1CanonicalKey). Reproducible byte-for-
+// byte by any substrate port; its Export()/ExportCompact() bytes are
+// frozen in testdata/golden_chain_v1{,.compact}.json.
+//
+// Inputs (all fixed, documented for cross-substrate reproduction):
+//   - signer substrate: MirrorMarkSigner{CorpusSHA: KAT1CorpusSHA(),
+//     Key: KAT1CanonicalKey()} (32 zero bytes corpus, empty key).
+//   - signers:    delve -> grounded -> recall.
+//   - payloads:   "delve-payload", "grounded-payload", "recall-payload".
+//   - timestamps: 2026-05-28T12:00:00Z, +1s, +2s (whole-second UTC, so
+//     CanonicalBytes' RFC3339 and Export's RFC3339Nano JSON coincide).
+//   - metadata:   {"cohort","purpose","version"} (sorted-key stable).
+//   - no RequireSigners (default open-signer policy).
+//
+// Returns the built chain. Panics only on a programming error (the
+// inputs are all fixed, so AppendSigned cannot fail in practice).
+func BuildGoldenChainV1() *Chain {
+	signer := &MirrorMarkSigner{CorpusSHA: KAT1CorpusSHA(), Key: KAT1CanonicalKey()}
+	c := NewChain()
+	c.Metadata = map[string]string{
+		"cohort":  "audit-chain-kat",
+		"purpose": "chain-level-golden",
+		"version": "v1",
+	}
+	for i, sid := range GoldenChainV1Signers {
+		ts := goldenChainV1T0.Add(time.Duration(i) * time.Second)
+		if _, err := c.AppendSigned(signer, sid, goldenChainV1Payloads[i], ts); err != nil {
+			panic("chain: BuildGoldenChainV1 invariant broken: " + err.Error())
+		}
+	}
+	return c
+}
 
 // ===== Pillar 3: honest (R143 LOUD-ONCE-WARNING-FLAG) =====
 

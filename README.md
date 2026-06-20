@@ -104,7 +104,7 @@ canonical reference template from `davly/conjure`):
 | Pillar | Surface |
 |--------|---------|
 | **mirrormark** (L43) | `MirrorMarkSigner` + `MirrorMarkVerifier` + 4 constants + 4 sentinel errors |
-| **kat** (R151)       | `KAT1HMACSHA256Hex` + `KAT1PublishedMark` + `AssertKAT1Parity()` |
+| **kat** (R151)       | `KAT1HMACSHA256Hex` + `KAT1PublishedMark` + `AssertKAT1Parity()` + chain-level golden `BuildGoldenChainV1()` / `GoldenChainV1Signers` (frozen `testdata/golden_chain_v1{,.compact}.json`) |
 | **honest** (R143)    | `LoudOnce` with `TryFire` / `HasFired` (atomic CAS) |
 | **legal** (R166)     | `LiabilityFooter` + `ReviewedByCounsel` (false) + `LibraryRecommendsHostActs` |
 | **manifest**         | `Manifest()` returning self-description with name + version + KAT-1 commitment |

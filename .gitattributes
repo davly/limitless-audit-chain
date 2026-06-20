@@ -1,0 +1,6 @@
+# Frozen chain-level KAT goldens are byte-for-byte contracts produced by
+# Go's encoding/json (LF line endings). They MUST stay LF on every
+# checkout so TestGoldenChainV1_* byte-comparisons hold regardless of
+# the platform's core.autocrlf setting.
+pkg/chain/testdata/golden_chain_v1.json -text
+pkg/chain/testdata/golden_chain_v1.compact.json -text

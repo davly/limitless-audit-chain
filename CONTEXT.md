@@ -70,7 +70,15 @@ this SDK ships the five pillars at commit #1:
    to `foundation/pkg/mirrormark` and every cohort substrate port.
 2. **kat** (R151) — `KAT1HMACSHA256Hex` (`239a7d0d…`) +
    `KAT1PublishedMark` (62-char canonical mark) +
-   `AssertKAT1Parity()` (substrate self-check).
+   `AssertKAT1Parity()` (substrate self-check). Plus the **chain-level
+   KAT**: `BuildGoldenChainV1()` / `GoldenChainV1Signers` deterministically
+   construct a golden 3-receipt chain (delve→grounded→recall, KAT-1
+   substrate) whose `Export()`/`ExportCompact()` bytes are frozen in
+   `pkg/chain/testdata/golden_chain_v1{,.compact}.json` and pinned by
+   `kat_chain_test.go`. This freezes the chain wire format before the
+   first cross-substrate consumer port; a port that reproduces these
+   bytes HAS demonstrated chain byte-parity (no parity claim is made
+   until one does).
 3. **honest** (R143) — `LoudOnce` with atomic CAS `TryFire` / `HasFired`.
 4. **legal** (R166) — `LiabilityFooter` + `ReviewedByCounsel` (false)
    + `LibraryRecommendsHostActs`.
