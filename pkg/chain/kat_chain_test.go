@@ -4,6 +4,7 @@ import (
 	"flag"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -108,5 +109,98 @@ func TestGoldenChainV1_GenesisReceiptHashPinned(t *testing.T) {
 	const want = "a91ccd9b32aa992e7d8f52c469a4d80888428e024acb5bf5af03bcee5cd303b5"
 	if got := g.Hash(); got != want {
 		t.Fatalf("genesis receipt hash drift: got %s want %s", got, want)
+	}
+}
+
+// TestGoldenChainV1_BuildIsDeterministic asserts the builder's core
+// claim directly: BuildGoldenChainV1 is "deterministic" only if two
+// independent builds produce byte-identical Export AND ExportCompact
+// output. The per-golden tests above each build once, so a builder that
+// silently depended on map-iteration order, wall-clock now(), or a
+// global seed could still match the frozen file by luck on one run yet
+// drift on the next — exactly the failure a freeze-before-port pin must
+// rule out. This compares two fresh builds against each other (not the
+// frozen file) so it stays meaningful even mid-wire-format-bump.
+func TestGoldenChainV1_BuildIsDeterministic(t *testing.T) {
+	a, err := BuildGoldenChainV1().Export()
+	if err != nil {
+		t.Fatalf("Export a: %v", err)
+	}
+	b, err := BuildGoldenChainV1().Export()
+	if err != nil {
+		t.Fatalf("Export b: %v", err)
+	}
+	if string(a) != string(b) {
+		t.Fatalf("BuildGoldenChainV1 pretty Export non-deterministic across builds:\n--- a ---\n%s\n--- b ---\n%s", a, b)
+	}
+	ca, err := BuildGoldenChainV1().ExportCompact()
+	if err != nil {
+		t.Fatalf("ExportCompact a: %v", err)
+	}
+	cb, err := BuildGoldenChainV1().ExportCompact()
+	if err != nil {
+		t.Fatalf("ExportCompact b: %v", err)
+	}
+	if string(ca) != string(cb) {
+		t.Fatalf("BuildGoldenChainV1 compact Export non-deterministic across builds:\n--- a ---\n%s\n--- b ---\n%s", ca, cb)
+	}
+}
+
+// TestGoldenChainV1_StructurePinned pins the chain's STRUCTURE (length,
+// signer sequence, genesis sentinel, and the prev_receipt_hash linkage
+// between adjacent receipts) independently of the JSON byte goldens. A
+// cross-substrate port that has not yet wired JSON Export can still
+// reproduce these structural invariants from BuildGoldenChainV1's
+// documented inputs; this is the structural smoke check that sits one
+// rung above the single genesis-hash pin.
+func TestGoldenChainV1_StructurePinned(t *testing.T) {
+	c := BuildGoldenChainV1()
+
+	if got := c.Len(); got != len(GoldenChainV1Signers) {
+		t.Fatalf("chain length: got %d want %d", got, len(GoldenChainV1Signers))
+	}
+
+	seq := c.SignerSequence()
+	if len(seq) != len(GoldenChainV1Signers) {
+		t.Fatalf("signer sequence length: got %d want %d", len(seq), len(GoldenChainV1Signers))
+	}
+	for i, want := range GoldenChainV1Signers {
+		if seq[i] != want {
+			t.Fatalf("signer[%d]: got %q want %q", i, seq[i], want)
+		}
+	}
+
+	// Genesis receipt must carry the all-zero sentinel; every later
+	// receipt's prev_receipt_hash must equal its predecessor's Hash().
+	if c.Receipts[0].PrevReceiptHash != GenesisPrevHash {
+		t.Fatalf("genesis prev hash: got %q want sentinel %q",
+			c.Receipts[0].PrevReceiptHash, GenesisPrevHash)
+	}
+	for i := 1; i < len(c.Receipts); i++ {
+		want := c.Receipts[i-1].Hash()
+		if got := c.Receipts[i].PrevReceiptHash; got != want {
+			t.Fatalf("link %d->%d broken: prev_receipt_hash=%s want predecessor Hash()=%s",
+				i-1, i, got, want)
+		}
+	}
+}
+
+// TestGoldenChainV1_MetadataKeyOrderIsCanonical defends the adversarial
+// case the chain-level KAT exists to catch: a cross-substrate port whose
+// JSON encoder emits map/object keys in insertion or hash order rather
+// than sorted order would produce different metadata bytes and silently
+// break parity. Go's encoding/json sorts string-map keys, which is what
+// the frozen golden was produced under; this test re-asserts that the
+// canonical golden's metadata block is exactly the sorted-key form so a
+// reviewer reading only this test knows the contract a port must meet.
+func TestGoldenChainV1_MetadataKeyOrderIsCanonical(t *testing.T) {
+	got, err := BuildGoldenChainV1().ExportCompact()
+	if err != nil {
+		t.Fatalf("ExportCompact: %v", err)
+	}
+	// Sorted-key order: cohort < purpose < version (lexicographic).
+	const wantMeta = `"metadata":{"cohort":"audit-chain-kat","purpose":"chain-level-golden","version":"v1"}`
+	if !strings.Contains(string(got), wantMeta) {
+		t.Fatalf("metadata not in canonical sorted-key form.\nwant substring: %s\nin: %s", wantMeta, got)
 	}
 }
