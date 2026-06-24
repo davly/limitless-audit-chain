@@ -224,6 +224,9 @@ func ValidateReceiptShape(r Receipt) error {
 	if r.SignerID == "" {
 		return ErrShapeEmptySigner
 	}
+	if signerIDHasControlChars(r.SignerID) {
+		return ErrSignerIDControlChar
+	}
 	if r.Timestamp.IsZero() {
 		return ErrShapeZeroTimestamp
 	}
@@ -231,6 +234,30 @@ func ValidateReceiptShape(r Receipt) error {
 		return ErrShapeEmptySignature
 	}
 	return nil
+}
+
+// signerIDHasControlChars reports whether s contains any ASCII control
+// character (byte < 0x20: newline, carriage-return, tab, NUL, etc.).
+//
+// SignerID is serialised into the signed canonical bytes with an in-band
+// newline+colon delimiter (see CanonicalBytes). A control character —
+// especially a newline — in a signer_id would inject extra signed lines
+// (e.g. a forged `timestamp:` value) into the canonical form, producing
+// an ambiguous duplicate-field signed receipt and breaking cross-
+// substrate byte-identity. Rejecting such signer_ids at the trust
+// boundaries (Verify, AppendSigned, ValidateReceiptShape) is the
+// canonical-form input-validation guard.
+//
+// All legitimate signer_ids (e.g. "delve" and the five pipeline names)
+// are printable ASCII / UTF-8 with no control chars, so this guard is
+// byte-identity-preserving for every real signer.
+func signerIDHasControlChars(s SignerID) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] < 0x20 {
+			return true
+		}
+	}
+	return false
 }
 
 // isHex returns true iff s is composed entirely of lowercase hex digits.
@@ -261,6 +288,12 @@ var ErrShapePayloadHashNotHex = errors.New("receipt: payload_hash not lowercase 
 
 // ErrShapeEmptySigner — signer_id is the empty string.
 var ErrShapeEmptySigner = errors.New("receipt: empty signer_id")
+
+// ErrSignerIDControlChar — signer_id contains an ASCII control character
+// (newline / carriage-return / other byte < 0x20) which would inject
+// extra lines into the signed canonical bytes (canonical-bytes
+// injection). Rejected at every trust boundary.
+var ErrSignerIDControlChar = errors.New("chain: signer_id contains control characters (canonical-bytes injection)")
 
 // ErrShapeZeroTimestamp — timestamp is the zero value.
 var ErrShapeZeroTimestamp = errors.New("receipt: zero timestamp")

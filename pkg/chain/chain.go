@@ -152,6 +152,11 @@ func (c *Chain) AppendSigned(
 	if signerID == "" {
 		return Receipt{}, ErrShapeEmptySigner
 	}
+	if signerIDHasControlChars(signerID) {
+		// Refuse to MINT a receipt whose signer_id would inject extra
+		// lines into the signed canonical bytes.
+		return Receipt{}, ErrSignerIDControlChar
+	}
 	if !c.IsAllowedSigner(signerID) {
 		return Receipt{}, fmt.Errorf("%w: signer=%q not in RequireSigners",
 			ErrUnknownSigner, signerID)

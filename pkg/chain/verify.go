@@ -62,6 +62,13 @@ func (c *Chain) Verify(verifier VerifierFunc) error {
 		return ErrGenesisPrevHash
 	}
 	for i, r := range c.Receipts {
+		if signerIDHasControlChars(r.SignerID) {
+			// Reject canonical-bytes injection (e.g. a newline in
+			// signer_id that forges extra signed lines) BEFORE any
+			// prev-hash / signature work. A maliciously-crafted
+			// Imported chain (Import does not validate) fails here.
+			return fmt.Errorf("%w: receipt[%d]", ErrSignerIDControlChar, i)
+		}
 		if !c.IsAllowedSigner(r.SignerID) {
 			return fmt.Errorf("%w: receipt[%d].SignerID=%q", ErrUnknownSigner, i, r.SignerID)
 		}
