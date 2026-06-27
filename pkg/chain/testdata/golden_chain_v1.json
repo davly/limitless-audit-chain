@@ -1,0 +1,30 @@
+{
+  "receipts": [
+    {
+      "prev_receipt_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "payload_hash": "4ee7429c82bb59d57bcc15cad649a1e8c99088673408a94b2d285981e6f941ed",
+      "signer_id": "delve",
+      "timestamp": "2026-05-28T12:00:00Z",
+      "signature": "lore@v1:AAAAAAAAAAB5LmajnV334aoV55QoreqC9DWWlyzU92XCg8OlEwW6Bw"
+    },
+    {
+      "prev_receipt_hash": "a91ccd9b32aa992e7d8f52c469a4d80888428e024acb5bf5af03bcee5cd303b5",
+      "payload_hash": "3c39ac1eedb0b276fcc6d3af8fa0ece9e68e4604b9a97f1538567df93b692867",
+      "signer_id": "grounded",
+      "timestamp": "2026-05-28T12:00:01Z",
+      "signature": "lore@v1:AAAAAAAAAACzxdqpUOeY3alM-e_V8--UrBIlOcJq3laILLxwGbEaCQ"
+    },
+    {
+      "prev_receipt_hash": "6a9abebd412c40e040cf99d169d2b4258f3af23e21eddf1723911e24f75df28b",
+      "payload_hash": "5bdcac2012db0c42bfab8c7665d839afc4daba7707222b68b716c04165722e1d",
+      "signer_id": "recall",
+      "timestamp": "2026-05-28T12:00:02Z",
+      "signature": "lore@v1:AAAAAAAAAABn81cD4zyJiREUZZGkLx4u7NuIQEUhZhmI5ZbWpamJBA"
+    }
+  ],
+  "metadata": {
+    "cohort": "audit-chain-kat",
+    "purpose": "chain-level-golden",
+    "version": "v1"
+  }
+}

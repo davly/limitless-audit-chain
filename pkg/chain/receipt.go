@@ -45,14 +45,14 @@
 //
 // This is SDK extraction #8 across the cross-substrate SDK family:
 //
-//	1. limitless-beam-otp   — BEAM (Erlang/Elixir/Gleam)
-//	2. limitless-c-crypto   — C / C++
-//	3. limitless-rs         — Rust
-//	4. limitless-jvm        — JVM (Kotlin/Java/Scala)
-//	5. limitless-ts         — TypeScript
-//	6. limitless-py         — Python
-//	7. limitless-proto      — Protocol Buffer wire contracts
-//	8. limitless-audit-chain — THIS package (Go canonical)
+//  1. limitless-beam-otp   — BEAM (Erlang/Elixir/Gleam)
+//  2. limitless-c-crypto   — C / C++
+//  3. limitless-rs         — Rust
+//  4. limitless-jvm        — JVM (Kotlin/Java/Scala)
+//  5. limitless-ts         — TypeScript
+//  6. limitless-py         — Python
+//  7. limitless-proto      — Protocol Buffer wire contracts
+//  8. limitless-audit-chain — THIS package (Go canonical)
 //
 // Future per-substrate ports (Rust / TS / Py / JVM) will land their
 // own audit-chain modules whose canonical-bytes encoding is byte-

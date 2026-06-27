@@ -131,11 +131,11 @@ func (c *Chain) IsAllowedSigner(s SignerID) bool {
 //
 // Behavior:
 //
-//	1. prev_receipt_hash := chain.Tip().Hash()  (or GenesisPrevHash if empty)
-//	2. payload_hash      := HashPayload(payload)
-//	3. timestamp         := now() (UTC, RFC3339-rounded)
-//	4. signature         := signer.Sign(canonical_bytes_so_far)
-//	5. chain.Append(receipt)
+//  1. prev_receipt_hash := chain.Tip().Hash()  (or GenesisPrevHash if empty)
+//  2. payload_hash      := HashPayload(payload)
+//  3. timestamp         := now() (UTC, RFC3339-rounded)
+//  4. signature         := signer.Sign(canonical_bytes_so_far)
+//  5. chain.Append(receipt)
 //
 // The Signer interface lives in signer.go so callers can plug in any
 // substrate (Mirror-Mark HMAC, ed25519, secp256k1, RSA, ...) without
